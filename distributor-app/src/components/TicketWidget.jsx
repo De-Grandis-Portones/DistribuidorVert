@@ -4,6 +4,9 @@ import {
   fileToTicketAttachment,
   formatTicketAttachmentMeta,
   isImageTicketAttachment,
+  ticketAttachmentsTotalBytes,
+  formatTicketAttachmentsMb,
+  MAX_TICKET_ATTACHMENTS_TOTAL_BYTES,
 } from '../utils/ticketAttachment';
 
 // Botón "Tickets" en el header del portal del distribuidor: abre un panel
@@ -60,7 +63,15 @@ export default function TicketWidget({ distributorId, distributorLabel }) {
       for (const file of files) {
         nuevos.push(await fileToTicketAttachment(file));
       }
-      setAdjuntos((prev) => [...prev, ...nuevos].slice(0, 5));
+      const combinados = [...adjuntos, ...nuevos].slice(0, 5);
+      const totalBytes = ticketAttachmentsTotalBytes(combinados);
+      if (totalBytes > MAX_TICKET_ATTACHMENTS_TOTAL_BYTES) {
+        throw new Error(
+          `Entre todos los adjuntos no pueden superar ${formatTicketAttachmentsMb(MAX_TICKET_ATTACHMENTS_TOTAL_BYTES)} ` +
+          `(llevás ${formatTicketAttachmentsMb(totalBytes)}). Sacá alguno o elegí uno más liviano.`
+        );
+      }
+      setAdjuntos(combinados);
     } catch (err) {
       setError(err.message || 'No se pudo adjuntar el archivo.');
     } finally {

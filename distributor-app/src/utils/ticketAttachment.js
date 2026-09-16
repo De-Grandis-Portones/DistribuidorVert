@@ -4,6 +4,15 @@
 // formato de attachment, mismos límites).
 const MAX_TICKET_ATTACHMENT_BYTES = 15 * 1024 * 1024;
 const MAX_TICKET_VIDEO_ATTACHMENT_BYTES = 5 * 1024 * 1024;
+// Tope combinado de TODOS los adjuntos de un mismo ticket. En base64 un
+// archivo pesa ~x1.34 su tamaño real. En el resto del ecosistema esto se
+// compara contra el límite de 25MB del body-parser de cada backend — ACÁ
+// no hay backend propio (ver src/api/tickets.js, inserta directo a Supabase
+// con la clave anon), así que el límite real es el que imponga PostgREST /
+// el gateway de Supabase, que puede ser bastante MENOR a 25MB. Este tope
+// sigue siendo mejor que nada, pero convendría confirmar el límite real del
+// proyecto de Supabase en uso antes de asumir que 15MB siempre entra.
+export const MAX_TICKET_ATTACHMENTS_TOTAL_BYTES = 15 * 1024 * 1024;
 const VIDEO_TICKET_ATTACHMENT_TYPES = new Set(['video/mp4', 'video/quicktime', 'video/webm']);
 const ALLOWED_TICKET_ATTACHMENT_TYPES = new Set([
   'application/pdf',
@@ -26,6 +35,14 @@ function maxBytesForFile(file) {
 
 function formatMb(bytes) {
   return `${Math.round((bytes / (1024 * 1024)) * 10) / 10} MB`;
+}
+
+export function ticketAttachmentsTotalBytes(list) {
+  return (Array.isArray(list) ? list : []).reduce((sum, a) => sum + (Number(a?.size) || 0), 0);
+}
+
+export function formatTicketAttachmentsMb(bytes) {
+  return formatMb(bytes);
 }
 
 function safeText(value) {
