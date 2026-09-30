@@ -6,10 +6,14 @@ import { supabase } from '../lib/supabaseClient';
 // inserta directo con la clave anon de Supabase - requiere que la tabla
 // tenga una policy de RLS que permita el insert (ver
 // distributor-app/README_TICKETS.md).
-export async function createDistributorTicket({ categoria, mensaje, creadoPorId, creadoPorUsername, rutaOrigen, adjuntos }) {
+// `titulo` necesita la columna tickets.titulo (migración tickets_titulo de
+// Planificación): esta app no puede crearla (clave anon), así que se publica
+// después de que esa migración haya corrido.
+export async function createDistributorTicket({ titulo, categoria, mensaje, creadoPorId, creadoPorUsername, rutaOrigen, adjuntos }) {
   const { data, error } = await supabase
     .from('tickets')
     .insert({
+      titulo: String(titulo || '').trim().slice(0, 120) || null,
       categoria,
       mensaje,
       ruta_origen: rutaOrigen || null,

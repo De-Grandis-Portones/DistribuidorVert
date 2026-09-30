@@ -22,6 +22,10 @@ const TICKET_CATEGORIAS = [
   'Otro',
 ];
 
+// Título libre y obligatorio, para distinguir un ticket de otro en la vista
+// admin de planificación (con solo la categoría se veían todos iguales).
+const MAX_TITULO = 120;
+
 const T = {
   surface: '#ffffff',
   ink: '#0f172a',
@@ -37,6 +41,7 @@ export default function TicketWidget({ distributorId, distributorLabel }) {
   const [open, setOpen] = useState(false);
   const panelRef = useRef(null);
 
+  const [titulo, setTitulo] = useState('');
   const [categoria, setCategoria] = useState(TICKET_CATEGORIAS[0]);
   const [mensaje, setMensaje] = useState('');
   const [adjuntos, setAdjuntos] = useState([]);
@@ -99,6 +104,10 @@ export default function TicketWidget({ distributorId, distributorLabel }) {
 
   async function enviarTicket(e) {
     e.preventDefault();
+    if (!titulo.trim()) {
+      setError('Poné un título antes de enviar.');
+      return;
+    }
     if (!mensaje.trim()) {
       setError('Escribí el detalle antes de enviar.');
       return;
@@ -107,6 +116,7 @@ export default function TicketWidget({ distributorId, distributorLabel }) {
     setEnviando(true);
     try {
       await createDistributorTicket({
+        titulo: titulo.trim(),
         categoria,
         mensaje: mensaje.trim(),
         rutaOrigen: window.location.pathname,
@@ -114,6 +124,7 @@ export default function TicketWidget({ distributorId, distributorLabel }) {
         creadoPorUsername: distributorLabel,
         adjuntos,
       });
+      setTitulo('');
       setMensaje('');
       setAdjuntos([]);
       setEnviado(true);
@@ -154,6 +165,19 @@ export default function TicketWidget({ distributorId, distributorLabel }) {
         >
           <div style={{ padding: 14, maxHeight: 460, overflowY: 'auto' }}>
             <form onSubmit={enviarTicket} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 5, color: T.inkWeak }}>
+                  Título
+                </label>
+                <input
+                  value={titulo}
+                  onChange={(e) => setTitulo(e.target.value)}
+                  maxLength={MAX_TITULO}
+                  placeholder="Ej: No llegó el pedido de la semana pasada"
+                  style={{ width: '100%', padding: '9px 10px', borderRadius: 10, border: `1px solid ${T.border}`, background: T.surface, color: T.ink, fontSize: 13, boxSizing: 'border-box' }}
+                />
+              </div>
+
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 5, color: T.inkWeak }}>
                   Categoría
@@ -269,7 +293,7 @@ export default function TicketWidget({ distributorId, distributorLabel }) {
 
               <button
                 type="submit"
-                disabled={enviando || !mensaje.trim()}
+                disabled={enviando || !titulo.trim() || !mensaje.trim()}
                 style={{
                   width: '100%', padding: '10px 12px', fontSize: 13, borderRadius: 10,
                   border: 'none', background: T.brand, color: '#fff', fontWeight: 700, cursor: 'pointer',

@@ -34,6 +34,16 @@ acá no hay sesión de Supabase Auth) **inserte** tickets con
 `app_origen = 'distribuidor'`, pero no lea ni edite los tickets de nadie
 (no hay policy de `select`/`update`/`delete` para `anon`).
 
+El widget también manda `titulo` (título libre, obligatorio en el form). Esa
+columna la crea la migración `tickets_titulo` de Planificación al arrancar su
+backend; esta app no puede crearla con la clave anon, así que hay que publicarla
+**después** de que esa migración haya corrido. Si hace falta antes, alcanza con
+correr a mano:
+
+```sql
+alter table public.tickets add column if not exists titulo text;
+```
+
 Si `public.tickets` todavía no existe en ese proyecto (por ejemplo si
 `distribuidor-vert` usa un proyecto de Supabase distinto al de Planificación/
 Integrador/Presupuestador), primero hay que crear la tabla — copiar la
