@@ -9,8 +9,14 @@ import { supabase } from '../lib/supabaseClient';
 // `titulo` necesita la columna tickets.titulo (migración tickets_titulo de
 // Planificación): esta app no puede crearla (clave anon), así que se publica
 // después de que esa migración haya corrido.
+//
+// Sin .select() a propósito: pedir la fila de vuelta es un INSERT ... RETURNING,
+// y con RLS eso además exige una policy de SELECT para `anon`, que no hay (ni
+// debe haber: vería los tickets de todos). Con solo la policy de INSERT del
+// README, el insert entero fallaba con "new row violates row-level security".
+// Nadie usa lo que devuelve esta función.
 export async function createDistributorTicket({ titulo, categoria, mensaje, creadoPorId, creadoPorUsername, rutaOrigen, adjuntos }) {
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('tickets')
     .insert({
       titulo: String(titulo || '').trim().slice(0, 120) || null,
@@ -21,10 +27,7 @@ export async function createDistributorTicket({ titulo, categoria, mensaje, crea
       creado_por_username: creadoPorUsername || null,
       app_origen: 'distribuidor',
       adjuntos: Array.isArray(adjuntos) ? adjuntos.slice(0, 5) : [],
-    })
-    .select()
-    .single();
+    });
 
   if (error) throw new Error(error.message || 'No se pudo enviar el ticket.');
-  return data;
 }
