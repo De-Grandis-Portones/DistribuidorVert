@@ -9,6 +9,7 @@ import {
   setOdooDistributorId,
 } from './api/odoo';
 import { loginDistributorSimple } from './api/auth';
+import TicketWidget from './components/TicketWidget';
 import './App.css';
 
 // ===== Helpers comunes =====
@@ -348,6 +349,10 @@ function App() {
     }
   };
 
+  const currentDistributorLabel =
+    distributors.find((d) => String(d.id) === String(sessionCtx?.odoo_distributor_id))?.name ||
+    (sessionCtx?.login_id ? `Distribuidor #${sessionCtx.login_id}` : 'Distribuidor');
+
   // ===== Pantalla de login =====
 
   if (!loggedIn) {
@@ -399,6 +404,10 @@ function App() {
           >
             {loadingPickings ? 'Actualizando...' : 'Actualizar entregas'}
           </button>
+          <TicketWidget
+            distributorId={sessionCtx?.login_id}
+            distributorLabel={currentDistributorLabel}
+          />
           <button type="button" onClick={handleLogout}>
             Salir
           </button>
