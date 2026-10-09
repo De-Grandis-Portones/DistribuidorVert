@@ -19,6 +19,7 @@ const TICKET_CATEGORIAS = [
   'Duda sobre pedidos / entregas',
   'Error en el portal',
   'Consulta sobre una cotización',
+  'Sugerencias',
   'Otro',
 ];
 
